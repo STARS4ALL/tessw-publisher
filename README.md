@@ -148,11 +148,29 @@ log_messages = debug
 
 ## Running the software
 
-The software can be run in foreground mode in a console for testing purposes. With the virtual environment active just type:
+The software can be run in foreground mode in a console for testing purposes. 
+With the virtual environment active just type:
 
 
 ```bash
-(venv_tessw) pi@astroserver:~ $ tessw --config venv_tessw/etc/config.ini
+(venv_tessw) pi@astroserver:~ $ tessw --config venv_tessw/etc/config.ini 
+```
+
+And the prpogram will show on console some similar to this. 
+In this case, there was no photometer attached, so it quits.
+
+```
+2020-07-22T07:56:52+0000 [mqtt#info] MQTT Client library version 0.3.9
+2020-07-22T07:56:52+0000 [global#info] tessw 0.1.1 on Twisted 20.3.0, Python 3.5
+2020-07-22T07:56:52+0000 [supvr#info] starting Supervisor Service
+2020-07-22T07:56:52+0000 [phot1#info] starting Photometer Service 1
+2020-07-22T07:56:52+0000 [phot1#critical] [Errno 2] could not open port /dev/ttyUSB0: [Errno 2] No such file or directory: '/dev/ttyUSB0'
+2020-07-22T07:56:52+0000 [phot1#warn] stopping Photometer Service 1
+2020-07-22T07:56:52+0000 [supvr#warn] Will stop the reactor asap.
+2020-07-22T07:56:52+0000 [mqttS#info] starting MQTT Client Service
+2020-07-22T07:56:52+0000 [mqtt.client.factory.MQTTFactory#info] Starting factory <mqtt.client.factory.MQTTFactory object at 0x75e9c9b0>
+2020-07-22T07:56:52+0000 [supvr#info] Getting info from all photometers
+2020-07-22T07:56:53+0000 [-] Main loop terminated.
 ```
 
 However, it has been designed to run as a systemd service. The following section describes how to create this systemd service.
