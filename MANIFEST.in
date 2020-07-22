@@ -1,0 +1,3 @@
+include versioneer.py
+include tessw/_version.py
+recursive-include files *

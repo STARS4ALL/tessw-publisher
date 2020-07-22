@@ -1,0 +1,10 @@
+_trial_temp/
+*.csv
+*.log
+*.txt
+*.egg-info/
+build
+dist
+*.pyc
+*.pyo
+*~
