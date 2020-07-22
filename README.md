@@ -1,5 +1,8 @@
 
-# tessw
+# tessw-publisher
+
+Serial TESS-W MQTT Publisher daemon
+
 Reads TESS-W data though serial port and publishes to an MQTT broker
 To be used in special environments with little or null radio emissions (no WiFi)
 
@@ -181,7 +184,7 @@ Place a file named `tesswd.service`  under `/lib/systemd/system` with the follow
 
 ```
 [Unit]
-Description=TESS-W Publisher daemon
+Description=Serial TESS-W MQTT Publisher daemon
 Documentation=https://github.com/STARS4ALL/tessw-publisher
 
 [Service]

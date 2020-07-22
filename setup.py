@@ -5,19 +5,12 @@ import sys
 from setuptools import setup
 import versioneer
 
-# Default description in markdown
-#long_description = open('README.md').read()
- 
-# Converts from makrdown to rst using pandoc
-# and its python binding.
-# Docunetation is uploaded in PyPi when registering
-# by issuing `python setup.py register`
 
 LONG_DESCRIPTION = open('README.md').read()
 PKG_NAME     = 'tessw-publisher'
 AUTHOR       = 'Rafael Gonzalez'
 AUTHOR_EMAIL = 'astrorafael@gmail.es'
-DESCRIPTION  = 'Reads TESS-W data and publishes to an MQTT broker',
+DESCRIPTION  = 'Serial TESS-W MQTT Publisher daemon',
 LICENSE      = 'MIT'
 KEYWORDS     = 'Astronomy Python RaspberryPi'
 URL          = 'http://github.com/astrorafael/tessw-publisher/'
@@ -39,12 +32,9 @@ CLASSIFIERS  = [
     'Development Status :: 4 - Beta',
 ]
 
-if os.name == "posix":
-  DATA_FILES  = [
-   ]
-else:
-  print("ERROR: unsupported OS {name}".format(name = os.name))
-  sys.exit(1)
+DATA_FILES  = [
+]
+
 
 SCRIPTS = [
     'files/usr/local/bin/tessw',
