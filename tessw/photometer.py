@@ -199,8 +199,9 @@ class PhotometerService(Service):
     def getInfo(self):
         '''Asynchronous operations'''
         if not self.options['old_firmware'] and self.info is None:
-            self.info_deferred = defer.Deferred()
-            deferred = self.info_deferred
+            deferred = defer.Deferred()
+            deferred.addTimeout(10, reactor)
+            self.info_deferred = deferred
         else:
             self.log.info("Photometer Info: {info}", info=self.info)
             deferred = defer.succeed(self.info)

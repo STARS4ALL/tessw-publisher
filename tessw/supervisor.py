@@ -16,7 +16,7 @@ from __future__ import division, absolute_import
 
 from twisted.logger         import Logger
 from twisted.internet       import reactor, task
-from twisted.internet.defer import inlineCallbacks,  DeferredList
+from twisted.internet.defer import inlineCallbacks,  DeferredList, gatherResults
 
 #--------------
 # local imports
@@ -49,7 +49,8 @@ class SupervisorService(MultiService):
         self.photometers = []   # Array of photometers
         self.task = None        # Periodic task to poll Photometers
         self.i = 0              # current photometer being sampled
-        self._registryDone = False
+        self._registryDone = {}
+        self._errorCount        = {} 
         
     # -----------
     # Service API
@@ -60,8 +61,9 @@ class SupervisorService(MultiService):
         self.mqttService    = self.parent.getServiceNamed(MQTT_SERVICE)
         N = self.options['nphotom']
         for i in range(1, N+1):
-            label = 'phot'+str(i)
             self.photometers.append(self.getServiceNamed(PHOTOMETER_SERVICE + ' ' + str(i)))
+        self._registryDone = {phot.label: False for phot in self.photometers}
+        self._errorCount   = {phot.label: 0     for phot in self.photometers}
         super().startService()
         self.task = reactor.callLater(0, self.getInfo)
 
@@ -101,33 +103,47 @@ class SupervisorService(MultiService):
             log.error("could not stop the reactor")
 
 
+
     def getInfo(self):
         '''Get registry info for all photometers'''
         log.info("Getting info from all photometers")
         N = self.options['nphotom']
         self.task = task.LoopingCall(self.poll)
         self.task.start(self.options['T']//N, now=False)
-        dli = [photometer.getInfo() for photometer in self.photometers]
-        for deferred in dli:
-            deferred.addCallback(self._addInfo)
-        dli = DeferredList(dli, consumeErrors=True)
-        dli.addCallback(self._info_complete)
+        deferreds = [photometer.getInfo() for photometer in self.photometers]
+        for deferred, photometer in zip(deferreds, self.photometers):
+            deferred.addCallback(self._addInfo, photometer.label)
+            deferred.addErrback(self._timeout, photometer.label)
+        dli = gatherResults(deferreds, consumeErrors=False)
         self.kk = dli
         return dli
 
 
+    def isOffline(self, item):
+        flag = item[1] == self.options['ncycles']
+        if flag:
+            log.warn("Photometer {label} went offline", label=item[0])
+        return flag
+
     def poll(self):
-        i = self.i
+        i      = self.i
+        label  = self.photometers[i].label
         try:
             sample = self.photometers[i].buffer.getBuffer().popleft()   
         except IndexError as e:
-            log.error("Photometer[{i}] {e}", e=e, i=i)
+            ec = self._errorCount[label] + 1
+            self._errorCount[label] = min(self.options['ncycles'], ec)
+            result_list = map(self.isOffline, self._errorCount.items())
+            if all(result_list):
+                log.critical("No photometer is alive. Stopping the daemon")
+                reactor.stop()
         else:
             # Take out uneeded information
-            sample = self.photometers[i].curate(sample)
-            log.info("Photometer[{i}] = {sample}", sample=sample, i=i)
-            if self._registryDone:
-                self.mqttService.readings_queue.put(sample)
+            self._errorCount[label] = 0
+            if self._registryDone[label]:
+                sample = self.photometers[i].curate(sample)
+                log.info("Photometer[{i}] = {sample}", sample=sample, i=i)
+                self.mqttService.addReading(sample)
             else:
                 log.warn("Not yet registered. Ignoring sample from Photometer[{i}]",i=i)
         finally:
@@ -137,11 +153,16 @@ class SupervisorService(MultiService):
     # Helper methods
     # --------------
 
-    def _addInfo(self, photometer_info):
-        log.info("Passing {name} photometer info to register queue", name=photometer_info['name'])
-        self.mqttService.register_queue.put(photometer_info)
+    def _addInfo(self, photometer_info, *args):
+        label = args[0]
+        log.info("Passing {label} photometer info ({name}) to register queue", label=label, name=photometer_info['name'])
+        self._registryDone[label] = True
+        self.mqttService.addRegisterRequest(photometer_info)
 
     def _info_complete(self, *args):
-        log.info("Finished getting info from all photometers")
+        log.info("Finished getting info from all photometers: {info}", info=args)
+
+    def _timeout(self, failure, *args):
+        log.error("Photometer {label} timeout getting info", label=args[0])
 
 

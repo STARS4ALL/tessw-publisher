@@ -98,6 +98,7 @@ def loadCfgFile(path):
     options['global'] = {}
     N = options['global']['nphotom'] = parser.getint("global","nphotom")
     options['global']['T']           = parser.getint("global","T")
+    options['global']['ncycles']     = parser.getint("global","ncycles")
     options['global']['log_level']   = parser.get("global","log_level")
 
     for i in range(1,N+1):

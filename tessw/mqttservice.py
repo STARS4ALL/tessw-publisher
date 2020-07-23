@@ -76,8 +76,7 @@ class MQTTService(ClientService):
             self.options['password'] = None
         ClientService.__init__(self, self.endpoint, self.factory, 
             retryPolicy=backoffPolicy(initialDelay=INITIAL_DELAY, factor=FACTOR, maxDelay=MAX_DELAY))
-        self.readings_queue = DeferredQueue()
-        self.register_queue = DeferredQueue()
+        self.queue = DeferredQueue()
     
     # -----------
     # Service API
@@ -124,7 +123,6 @@ class MQTTService(ClientService):
         self.protocol.onPublish       = self.publish
         self.protocol.onDisconnection = self.onDisconnection
         self.protocol.setWindowSize(3)
-
         try:
             yield self.protocol.connect("tessw-publisher" + '@' + HOSTNAME, 
                 username=self.options['username'], password=self.options['password'], 
@@ -134,7 +132,7 @@ class MQTTService(ClientService):
                broker=self.options['broker'], excp=e)
         else:
             log.info("Connected to {broker}", broker=self.options['broker'])
-            yield self.register()
+            reactor.callLater(0, self.publish)
 
 
     def onDisconnection(self, reason):
@@ -149,27 +147,22 @@ class MQTTService(ClientService):
         self.whenConnected().addCallback(self.connectToBroker)
 
   
-    @inlineCallbacks
-    def register(self):
-        log.info("Entering Registering Phase")
-        supvrService = self.parent.getServiceNamed(SUPVR_SERVICE)
-        N = supvrService.numberOfPhotometers()
-        for i in range(0,N):
-            info = yield self.register_queue.get()
-            msg = json.dumps(info)
-            topic = "{0}/{1}".format(TOPIC_ROOT, "register")
-            yield self.protocol.publish(topic=topic, qos=self.QoS, message=msg)
-        reactor.callLater(0, self.publish)
-        supvrService.registryDone()
+    def addRegisterRequest(self, photometer_info):
+        topic = "{0}/{1}".format(TOPIC_ROOT, "register")
+        self.queue.put( (topic, photometer_info) )
+
+
+    def addReading(self, reading):
+        topic = "{0}/{1}/{2}".format(TOPIC_ROOT, reading['name'], "reading")
+        self.queue.put( (topic, reading) )
 
 
     @inlineCallbacks
     def publish(self):
-        log.info("Entering Data Publishing Phase")
+        log.info("Entering Registry & Data Publishing Phase")
         while True:
             try:
-                reading = yield self.readings_queue.get()
-                topic = "{0}/{1}/{2}".format(TOPIC_ROOT, reading['name'], "reading")
+                topic, reading = yield self.queue.get()
                 msg = json.dumps(reading)
                 yield self.protocol.publish(topic=topic, qos=self.QoS, message=msg)
             except MQTTStateError as e:

@@ -152,7 +152,7 @@ class TopLevelService(MultiService):
         BaseMultiService.startService(self)
 
     def stopService(self):
-        self.periodicTask.cancel() # call every T seconds
+        self.periodicTask.stop() # call every T seconds
         return BaseMultiService.stopService(self)
 
     def _sighandler(self):
