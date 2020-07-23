@@ -72,6 +72,11 @@ T = 60
 # Not reloadable property
 nphotom = 1
 
+# Number of supervision cycles to declare a photometer offline
+# if the photometer does not delvier any data in all of these cycles
+# Not reloadable property
+ncycles = 3
+
 # component log level (debug, info, warn, error, critical)
 # reloadable property
 log_level = info
@@ -81,7 +86,6 @@ log_level = info
 #------------------------------------------------------------------------------#
 
 [phot1]
-
 
 # Write here the true TESS-W MAC address
 # Not reloadable property
@@ -128,7 +132,6 @@ log_messages = warn
 # Not reloadable property
 broker = tcp:test.mosquitto.org:1883
 
-
 # Username/password credentials
 # leave blank if not needed
 # non reloadable properies
@@ -138,6 +141,9 @@ password =
 # Keepalive connection (in seconds)
 # Not reloadable property
 keepalive = 60
+
+# Base topic to publish on
+topic = STARS4ALL
 
 # namespace log level (debug, info, warn, error, critical)
 # Reloadable property
