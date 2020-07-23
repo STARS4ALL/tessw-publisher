@@ -31,7 +31,6 @@ from mqtt.client.factory import MQTTFactory
 # -------------
 
 from tessw.logger import setLogLevel
-from tessw        import TOPIC_ROOT, SUPVR_SERVICE
 
 # ----------------
 # Module constants
@@ -148,12 +147,12 @@ class MQTTService(ClientService):
 
   
     def addRegisterRequest(self, photometer_info):
-        topic = "{0}/{1}".format(TOPIC_ROOT, "register")
+        topic = "{0}/{1}".format(self.options['topic'], "register")
         self.queue.put( (topic, photometer_info) )
 
 
     def addReading(self, reading):
-        topic = "{0}/{1}/{2}".format(TOPIC_ROOT, reading['name'], "reading")
+        topic = "{0}/{1}/{2}".format(self.options['topic'], reading['name'], "reading")
         self.queue.put( (topic, reading) )
 
 

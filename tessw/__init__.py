@@ -44,8 +44,6 @@ SUPVR_SERVICE      = 'Supervisor Service'
 
 TSTAMP_FORMAT      = "%Y-%m-%dT%H:%M:%SZ"
 
-TOPIC_ROOT = "STARS4ALL"
-
 # Photoemter models
 TESSW = "TESS-W"
 

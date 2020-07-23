@@ -119,6 +119,7 @@ def loadCfgFile(path):
     options['mqtt']['username']      = parser.get("mqtt","username")
     options['mqtt']['password']      = parser.get("mqtt","password")
     options['mqtt']['keepalive']     = parser.getint("mqtt","keepalive")
+    options['mqtt']['topic']         = parser.get("mqtt","topic")
     options['mqtt']['log_level']     = parser.get("mqtt","log_level")
     options['mqtt']['log_messages']  = parser.get("mqtt","log_messages")
 
