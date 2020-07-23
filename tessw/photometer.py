@@ -140,7 +140,10 @@ class PhotometerService(Service):
 
     def stopService(self):
         self.log.warn("stopping {name}", name=self.name)
-        self.parent.childStopped(self)
+        self.protocol.transport.loseConnection()
+        self.protocol = None
+        self.serport  = None
+        #self.parent.childStopped(self)
         return defer.succeed(None)
 
     #---------------------
@@ -214,8 +217,8 @@ class PhotometerService(Service):
         try:
             self.serport  = SerialPort(self.protocol, endpoint[0], reactor, baudrate=endpoint[1])
         except Exception as e:
-            self.log.critical("{excp}",excp=e)
-            self.stopService()
+            self.log.error("{excp}",excp=e)
+            self.protocol = None
         else:
             self.gotProtocol(self.protocol)
             self.log.info("Using serial port {tty} @ {baud} bps", tty=endpoint[0], baud=endpoint[1])

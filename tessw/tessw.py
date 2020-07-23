@@ -108,6 +108,8 @@ class TESSProtocolBase(LineOnlyReceiver):
     def connectionMade(self):
         self.log.debug("connectionMade()")
 
+    def connectionLost(self, reason):
+        self.log.debug("connectionLost() {reason}", reason=reason)
 
     def lineReceived(self, line):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)

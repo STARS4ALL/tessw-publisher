@@ -143,7 +143,8 @@ class MQTTService(ClientService):
         Tells ClientService what to do when the connection is lost
         '''
         log.warn("tessw-publisher lost connection with its MQTT broker")
-        self.task.cancel()
+        if self.task:
+            self.task.cancel()
         self.task = None
         self.whenConnected().addCallback(self.connectToBroker)
 
