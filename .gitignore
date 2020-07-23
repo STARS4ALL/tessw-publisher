@@ -2,6 +2,7 @@ _trial_temp/
 *.csv
 *.log
 *.txt
+*.ini
 *.egg-info/
 build
 dist

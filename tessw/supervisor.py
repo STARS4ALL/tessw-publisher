@@ -114,7 +114,7 @@ class SupervisorService(MultiService):
         for deferred, photometer in zip(deferreds, self.photometers):
             deferred.addCallback(self._addInfo, photometer.label)
             deferred.addErrback(self._timeout, photometer.label)
-        dli = gatherResults(deferreds, consumeErrors=False)
+        dli = gatherResults(deferreds, consumeErrors=False).addCallback(self._info_complete)
         self.kk = dli
         return dli
 
@@ -161,7 +161,7 @@ class SupervisorService(MultiService):
         self.mqttService.addRegisterRequest(photometer_info)
 
     def _info_complete(self, *args):
-        log.info("Finished getting info from all photometers: {info}", info=args)
+        log.info("Finished getting info from all photometers")
 
     def _timeout(self, failure, *args):
         log.error("Photometer {label} timeout getting info", label=args[0])
