@@ -140,6 +140,7 @@ class SupervisorService(MultiService):
         else:
             # Take out uneeded information
             self._errorCount[label] = 0
+            self.photometers[i].handleInfo(sample)
             if self._registryDone[label]:
                 sample = self.photometers[i].curate(sample)
                 log.info("Photometer[{i}] = {sample}", sample=sample, i=i)

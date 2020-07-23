@@ -166,6 +166,19 @@ class PhotometerService(Service):
     # Specific photometer API
     # -----------------------
 
+    def handleInfo(self, reading):
+        if self.info_deferred is not None:
+            self.info = {
+                'name'  : reading.get('name', None),
+                'calib' : reading.get('ZP', None),
+                'mac'   : self.options['mac_address'],
+                'rev'   : 2,
+            }
+            self.log.info("Photometer Info: {info}", info=self.info)
+            self.info_deferred.callback(self.info)
+            self.info_deferred = None
+
+
     def curate(self, reading):
         '''Readings ready for MQTT Tx according to our wire protocol'''
         reading['seq'] = self.counter
@@ -183,16 +196,13 @@ class PhotometerService(Service):
             reading['mag']  = round(reading['ZP'] - 2.5*math.log10(reading['freq']),2)
             self.info = {
                 'name'  : reading.get('name', None),
-                'calib' : reading.pop('ZP', None),
+                'calib' : reading.get('ZP', None),
                 'mac'   : self.options['mac_address'],
                 'rev'   : 2,
             }
             reading.pop('udp', None)
             reading.pop('ain', None)
-        if self.info_deferred is not None:
-            self.log.info("Photometer Info: {info}", info=self.info)
-            self.info_deferred.callback(self.info)
-            self.info_deferred = None
+            reading.pop('ZP',  None)
         return reading
 
     
@@ -200,7 +210,7 @@ class PhotometerService(Service):
         '''Asynchronous operations'''
         if not self.options['old_firmware'] and self.info is None:
             deferred = defer.Deferred()
-            deferred.addTimeout(10, reactor)
+            deferred.addTimeout(60, reactor)
             self.info_deferred = deferred
         else:
             self.log.info("Photometer Info: {info}", info=self.info)
