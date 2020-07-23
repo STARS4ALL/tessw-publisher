@@ -125,6 +125,7 @@ class SupervisorService(MultiService):
             log.warn("Photometer {label} went offline", label=item[0])
         return flag
 
+
     def poll(self):
         i      = self.i
         label  = self.photometers[i].label
@@ -156,7 +157,7 @@ class SupervisorService(MultiService):
 
     def _addInfo(self, photometer_info, *args):
         label = args[0]
-        log.info("Passing {label} photometer info ({name}) to register queue", label=label, name=photometer_info['name'])
+        log.debug("Passing {label} photometer info ({name}) to register queue", label=label, name=photometer_info['name'])
         self._registryDone[label] = True
         self.mqttService.addRegisterRequest(photometer_info)
 
